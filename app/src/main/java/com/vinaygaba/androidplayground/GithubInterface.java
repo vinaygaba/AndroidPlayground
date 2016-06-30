@@ -1,7 +1,5 @@
 package com.vinaygaba.androidplayground;
 
-import com.vinaygaba.androidplayground.models.Repo;
-
 import java.util.List;
 
 import retrofit2.Call;

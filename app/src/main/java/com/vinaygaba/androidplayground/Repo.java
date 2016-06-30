@@ -1,4 +1,4 @@
-package com.vinaygaba.androidplayground.models;
+package com.vinaygaba.androidplayground;
 
 /**
  * Created by vinaygaba on 6/30/16.
