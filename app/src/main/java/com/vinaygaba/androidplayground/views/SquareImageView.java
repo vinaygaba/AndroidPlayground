@@ -1,4 +1,4 @@
-package com.vinaygaba.androidplayground;
+package com.vinaygaba.androidplayground.views;
 
 import android.content.Context;
 import android.util.AttributeSet;

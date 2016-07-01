@@ -1,4 +1,4 @@
-package com.vinaygaba.androidplayground;
+package com.vinaygaba.androidplayground.util;
 
 import android.content.Context;
 import android.net.ConnectivityManager;

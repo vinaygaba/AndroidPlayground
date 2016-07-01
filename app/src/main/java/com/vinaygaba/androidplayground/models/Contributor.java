@@ -1,9 +1,9 @@
-package com.vinaygaba.androidplayground;
+package com.vinaygaba.androidplayground.models;
 
 /**
  * Created by vinaygaba on 6/30/16.
  */
-class Contributor {
+public class Contributor {
     String login;
     int contributions;
     String avatar_url;

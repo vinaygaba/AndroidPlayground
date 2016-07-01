@@ -1,4 +1,7 @@
-package com.vinaygaba.androidplayground;
+package com.vinaygaba.androidplayground.interfaces;
+
+import com.vinaygaba.androidplayground.models.Contributor;
+import com.vinaygaba.androidplayground.models.Repo;
 
 import java.util.List;
 
