@@ -79,6 +79,17 @@ public class RxJavaActivity extends AppCompatActivity {
                         return Observable.from(contributors);
                     }
                 })
+                .map(new Func1<Contributor, Contributor>() {
+                    @Override
+                    public Contributor call(Contributor contributor) {
+                        if(contributor.getLogin().equals("JakeWharton")){
+                            contributor.setLogin("VinayGaba");
+                            return contributor;
+                        }
+
+                        return contributor;
+                    }
+                })
                 .subscribeOn(Schedulers.newThread())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new Subscriber<Contributor>() {
