@@ -16,7 +16,7 @@
             android:padding="16dp"
             >
 
-            <com.vinaygaba.androidplayground.SquareImageView
+            <com.vinaygaba.androidplayground.views.SquareImageView
                 android:layout_width="50dp"
                 android:layout_height="wrap_content"
                 android:id="@+id/person_photo"
