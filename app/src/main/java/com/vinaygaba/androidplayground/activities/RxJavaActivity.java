@@ -32,6 +32,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 import rx.Observable;
 import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
+import rx.functions.Func1;
 import rx.schedulers.Schedulers;
 
 public class RxJavaActivity extends AppCompatActivity {
@@ -71,10 +72,16 @@ public class RxJavaActivity extends AppCompatActivity {
                 .build();
 
         gitHubInterface = retrofit.create(GithubRxInterface.class);
-        gitHubInterface.contributors("vinaygaba","CreditCardView")
+        gitHubInterface.contributors("square","retrofit")
+                .flatMap(new Func1<List<Contributor>, Observable<Contributor>>() {
+                    @Override
+                    public Observable<Contributor> call(List<Contributor> contributors) {
+                        return Observable.from(contributors);
+                    }
+                })
                 .subscribeOn(Schedulers.newThread())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Subscriber<List<Contributor>>() {
+                .subscribe(new Subscriber<Contributor>() {
                     @Override
                     public final void onCompleted() {
                         // do nothing
@@ -83,15 +90,15 @@ public class RxJavaActivity extends AppCompatActivity {
                         adapter.notifyDataSetChanged();
 
                     }
-
                     @Override
                     public final void onError(Throwable e) {
                         Log.e("GithubDemo", e.getMessage());
                     }
 
                     @Override
-                    public final void onNext(List<Contributor> response) {
-                        contributorList.addAll(response);
+                    public final void onNext(Contributor response) {
+                        contributorList.add(response);
+                        Log.e("OnNext","Called");
                     }
                 });
 
