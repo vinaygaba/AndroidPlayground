@@ -13,35 +13,35 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.squareup.picasso.Picasso;
-import com.vinaygaba.androidplayground.models.Contributor;
-import com.vinaygaba.androidplayground.interfaces.GithubInterface;
 import com.vinaygaba.androidplayground.R;
+import com.vinaygaba.androidplayground.interfaces.GithubInterface;
+import com.vinaygaba.androidplayground.interfaces.GithubRxInterface;
+import com.vinaygaba.androidplayground.models.Contributor;
 import com.vinaygaba.androidplayground.views.SquareImageView;
-import com.vinaygaba.androidplayground.util.Util;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import okhttp3.Cache;
 import okhttp3.Interceptor;
-import okhttp3.OkHttpClient;
 import retrofit2.Call;
-import retrofit2.Callback;
 import retrofit2.Retrofit;
+import retrofit2.adapter.rxjava.RxJavaCallAdapterFactory;
 import retrofit2.converter.gson.GsonConverterFactory;
+import rx.Observable;
+import rx.Subscriber;
+import rx.android.schedulers.AndroidSchedulers;
+import rx.schedulers.Schedulers;
 
-public class MainActivity extends AppCompatActivity {
+public class RxJavaActivity extends AppCompatActivity {
 
     @BindView(R.id.recyclerView)
     RecyclerView mRecyclerView;
 
     private List<Contributor> contributorList;
     private Retrofit retrofit;
-    private GithubInterface gitHubInterface;
+    private GithubRxInterface gitHubInterface;
     private RecyclerViewAdapter adapter;
     static Context context;
 
@@ -55,86 +55,47 @@ public class MainActivity extends AppCompatActivity {
 
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
         mRecyclerView.setLayoutManager(linearLayoutManager);
-
-        //initializeDummyData();
-        //setupIterceptor();
         setupRetrofitCall();
 
-
     }
-
 
     private void setupRetrofitCall() {
 
-        //setup cache
-        File httpCacheDirectory = new File(context.getCacheDir(), "responses");
-        int cacheSize = 10 * 1024 * 1024; // 10 MiB
-        Cache cache = new Cache(httpCacheDirectory, cacheSize);
-
-
-        OkHttpClient client = new OkHttpClient.Builder()
-                .addInterceptor(
-                        new Interceptor() {
-                            @Override
-                            public okhttp3.Response intercept(Chain chain) throws IOException {
-                                okhttp3.Response originalResponse = chain.proceed(chain.request());
-                                if (Util.isNetworkAvailable(context)) {
-                                    int maxAge = 60; // read from cache for 1 minute
-                                    return originalResponse.newBuilder()
-                                            .header("Cache-Control", "public, max-age=" + maxAge)
-                                            .build();
-                                } else {
-                                    int maxStale = 60 * 60 * 24 * 28; // tolerate 4-weeks stale
-                                    return originalResponse.newBuilder()
-                                            .header("Cache-Control", "public, only-if-cached, max-stale=" + maxStale)
-                                            .build();
-                                }
-                            }
-                        })
-                .cache(cache)
-                .build();
-
+        contributorList = new ArrayList<>();
 
         retrofit = new Retrofit.Builder()
                 .baseUrl("https://api.github.com/")
-                .client(client)
+                //.client(client)
                 .addConverterFactory(GsonConverterFactory.create())
+                .addCallAdapterFactory(RxJavaCallAdapterFactory.create())
                 .build();
 
-        gitHubInterface = retrofit.create(GithubInterface.class);
-        Call<List<Contributor>> call = gitHubInterface.contributors("vinaygaba","CreditCardView");
+        gitHubInterface = retrofit.create(GithubRxInterface.class);
+        gitHubInterface.contributors("vinaygaba","CreditCardView")
+                .subscribeOn(Schedulers.newThread())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Subscriber<List<Contributor>>() {
+                    @Override
+                    public final void onCompleted() {
+                        // do nothing
+                        adapter = new RecyclerViewAdapter(contributorList);
+                        mRecyclerView.setAdapter(adapter);
+                        adapter.notifyDataSetChanged();
 
-        call.enqueue(new Callback<List<Contributor>>() {
-            @Override
-            public void onResponse(Call<List<Contributor>> call, retrofit2.Response<List<Contributor>> response) {
+                    }
 
-                contributorList = response.body();
-                System.out.println("Response");
-                System.out.println(contributorList);
-                adapter = new RecyclerViewAdapter(contributorList);
-                mRecyclerView.setAdapter(adapter);
-                adapter.notifyDataSetChanged();
+                    @Override
+                    public final void onError(Throwable e) {
+                        Log.e("GithubDemo", e.getMessage());
+                    }
 
-            }
-
-            @Override
-            public void onFailure(Call<List<Contributor>> call, Throwable t) {
-                System.out.println("Failed");
-                t.printStackTrace();
-            }
-
-        });
-    }
-
-    private void initializeDummyData() {
-        contributorList = new ArrayList<>();
-        contributorList.add(new Contributor("RepoName1",10));
-        contributorList.add(new Contributor("RepoName2",20));
-        contributorList.add(new Contributor("RepoName3",30));
-        contributorList.add(new Contributor("RepoName4",40));
+                    @Override
+                    public final void onNext(List<Contributor> response) {
+                        contributorList.addAll(response);
+                    }
+                });
 
     }
-
 
     public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapter.RepoViewHolder>{
 
@@ -176,9 +137,15 @@ public class MainActivity extends AppCompatActivity {
         }
 
         public class RepoViewHolder extends RecyclerView.ViewHolder {
-            @BindView(R.id.cv) CardView cv;
-            @BindView(R.id.person_name) TextView contributorLogin;
-            @BindView(R.id.person_age) TextView contributions;
+            @BindView(R.id.cv)
+            CardView cv;
+
+            @BindView(R.id.person_name)
+            TextView contributorLogin;
+
+            @BindView(R.id.person_age)
+            TextView contributions;
+
             @BindView(R.id.person_photo)
             SquareImageView personPhoto;
 
